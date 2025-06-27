@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>受講生更新</title>
+</head>
+<body>
+<h1>受講生更新フォーム</h1>
+<form id="updateForm">
+  <input name="id" placeholder="受講生ID" required><br>
+  <input name="name" placeholder="名前" required><br>
+  <input name="kanaName" placeholder="カナ名" required><br>
+  <input name="nickname" placeholder="ニックネーム" required><br>
+  <input name="email" type="email" placeholder="メール" required><br>
+  <input name="area" placeholder="居住地域" required><br>
+  <input name="age" type="number" placeholder="年齢" required><br>
+  <input name="gender" placeholder="性別" required><br>
+  <input name="remark" placeholder="備考"><br>
+  <label>
+    削除フラグ:
+    <select name="deleted">
+      <option value="false">未削除</option>
+      <option value="true">削除</option>
+    </select>
+  </label><br>
+  <button type="submit">更新</button>
+</form>
+<div id="result"></div>
+
+<script>
+  document.getElementById("updateForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const student = {
+      id: form.id.value,
+      name: form.name.value,
+      kanaName: form.kanaName.value,
+      nickname: form.nickname.value,
+      email: form.email.value,
+      area: form.area.value,
+      age: Number(form.age.value),
+      gender: form.gender.value,
+      remark: form.remark.value,
+      deleted: form.deleted.value === "true"
+    };
+
+    const studentDetail = {
+      student: student,
+      studentCourseList: [],
+      applicationStatusList: []
+    };
+
+    try {
+      const res = await fetch("http://StudentManagementALB-1587932700.ap-northeast-1.elb.amazonaws.com/students", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(studentDetail)
+      });
+      if (res.ok) {
+        document.getElementById("result").textContent = "更新成功！";
+      } else {
+        document.getElementById("result").textContent = "更新失敗：" + res.status;
+      }
+    } catch (err) {
+      document.getElementById("result").textContent = "通信エラー：" + err;
+    }
+  });
+</script>
+</body>
+</html>

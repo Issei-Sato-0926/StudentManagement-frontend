@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>受講生検索</title>
+</head>
+<body>
+<h1>受講生検索フォーム</h1>
+<form id="searchForm">
+  <input name="name" placeholder="名前"><br>
+  <input name="area" placeholder="居住地域"><br>
+  <input name="gender" placeholder="性別"><br>
+  <button type="submit">検索</button>
+</form>
+
+<h2>検索結果</h2>
+<div id="results"></div>
+
+<script>
+  document.getElementById("searchForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const form = e.target;
+    const condition = {
+      name: form.name.value,
+      area: form.area.value,
+      gender: form.gender.value
+    };
+
+    try {
+      const res = await fetch("http://StudentManagementALB-1587932700.ap-northeast-1.elb.amazonaws.com/students/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(condition)
+      });
+
+      const data = await res.json();
+
+      if (Array.isArray(data) && data.length > 0) {
+        const html = data.map(d => {
+          const student = d.student;
+
+          // コース情報
+          const courseHtml = (d.studentCourseList || []).map(c =>
+            `<li>
+              <strong>コース名:</strong> ${c.courseName} <br>
+              <strong>開始:</strong> ${c.courseStartAt || "未設定"} <br>
+              <strong>終了:</strong> ${c.courseEndAt || "未設定"}
+            </li>`
+          ).join("");
+
+          // ステータス情報
+          const statusHtml = (d.applicationStatusList || []).map(s =>
+            `<li><strong>ステータス:</strong> ${s.status}</li>`
+          ).join("");
+
+          return `
+            <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+              <strong>ID:</strong> ${student.id}<br>
+              <strong>名前:</strong> ${student.name}<br>
+              <strong>メール:</strong> ${student.email}<br>
+              <strong>エリア:</strong> ${student.area}<br>
+              <strong>性別:</strong> ${student.gender}<br>
+              <strong>備考:</strong> ${student.remark || "なし"}<br>
+
+              ${courseHtml ? `<strong>受講コース:</strong><ul>${courseHtml}</ul>` : ""}
+              ${statusHtml ? `<strong>申込状況:</strong><ul>${statusHtml}</ul>` : ""}
+            </div>
